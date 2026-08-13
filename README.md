@@ -30,6 +30,30 @@ Four prompt variants and why each was needed: [`prompts/prompts.md`](prompts/pro
 
 Hardware: RunPod A100-80GB and RTX A6000. Total spend across the whole exercise: **~$28**.
 
+## The memory failure, measured
+
+Running [MIND](https://github.com/CSU-JPG/MIND)'s loop-closure benchmark against
+ABot-World over 400 clips puts a number on what's obvious by eye — walk somewhere, turn
+around, and the model has invented a different world:
+
+| metric | ABot-World | what "remembered" looks like |
+|---|---|---|
+| SSIM ↑ | **0.257** | ~1.0 |
+| LPIPS ↓ | **0.641** | ~0.0 |
+| PSNR ↑ | **10.64 dB** | 30 dB+ |
+
+`gsc` flips the return half of each out-and-back clip and compares it to the outbound
+half. At ~10 dB the returned view is closer to unrelated imagery than to where it started —
+the model isn't misremembering the scene, it's regenerating a new one. The failure is
+uniform, not occasional, and holds identically across first- and third-person.
+
+Which is what the config predicts: ABot runs a **21-latent-frame attention window** with
+no depth model and no 3D cache. The mirror paths are 47–95 frames, so by the time it's
+asked to reverse, the outbound half was never in the computation.
+
+Full writeup, caveats, and the action-encoding trap that nearly invalidated the whole run:
+[`benchmarks/MIND-ABot/`](benchmarks/MIND-ABot/).
+
 ## Findings worth the trouble
 
 **"Playable" is not a property most of these have.** Matrix-Game 3.5 has no input loop at

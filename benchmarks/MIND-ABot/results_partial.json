@@ -1,0 +1,40 @@
+{
+  "model": "ABot-World-0-5B-LF",
+  "benchmark": "MIND (CSU-JPG), mirror_test split",
+  "status": "PARTIAL — RunPod balance exhausted mid-eval; 33 of 40 anchors scored",
+  "clips_generated": 400,
+  "videos_scored": 329,
+  "anchors_scored": 33,
+  "anchors_planned": 40,
+  "metrics_run": ["lcm", "visual", "gsc"],
+  "metrics_skipped": {
+    "action": "requires ViPE conda environment",
+    "dino": "DINOv3 gated on HuggingFace (requires approval)"
+  },
+  "runtime": {
+    "gpu": "NVIDIA A100-SXM4-80GB",
+    "precision": "bf16",
+    "fp8": false,
+    "attention": "SDPA fallback (flash-attn 2.8.3 conflicts with xformers <=2.8.2)",
+    "prompt": "| unknown |",
+    "generation_time_min": 66.6,
+    "generation_rate_clips_per_min": 6.0
+  },
+  "gsc_loop_closure": {
+    "_note": "flips the return half of each out-and-back clip, compares to outbound half",
+    "avg_mse":   {"mean": 0.0897, "median": 0.0906, "min": 0.0557, "max": 0.1389},
+    "avg_lpips": {"mean": 0.6414, "median": 0.6405, "min": 0.5984, "max": 0.6875},
+    "avg_ssim":  {"mean": 0.2571, "median": 0.2745, "min": 0.1757, "max": 0.3196},
+    "avg_psnr":  {"mean": 10.6443, "median": 10.5420, "min": 8.6776, "max": 12.6468}
+  },
+  "gsc_by_perspective": {
+    "1st_data": {"n": 199, "mse": 0.0897, "lpips": 0.6414, "ssim": 0.2568, "psnr": 10.6380},
+    "3rd_data": {"n": 130, "mse": 0.0897, "lpips": 0.6414, "ssim": 0.2576, "psnr": 10.6540}
+  },
+  "convergence": [
+    {"n": 70,  "ssim": 0.2568, "lpips": 0.6422, "psnr": 10.615},
+    {"n": 199, "ssim": 0.2568, "lpips": 0.6414, "psnr": 10.638},
+    {"n": 209, "ssim": 0.2572, "lpips": 0.6415, "psnr": 10.643},
+    {"n": 329, "ssim": 0.2571, "lpips": 0.6414, "psnr": 10.644}
+  ]
+}

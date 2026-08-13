@@ -230,12 +230,38 @@ command, killed the first two pods. `create-pod` then returns 402.
 
 ---
 
-## RESUME STATE (2026-08-12)
+## Stop vs terminate — a wrong call, corrected
 
-Two pods, both **stopped** unless noted. `/workspace` persists across stop; SSH port
-remaps on every start — re-read from `get-pod → runtime.ports`.
+I advised **stopping** the pods rather than terminating, on the reasoning that
+`/workspace` persists and resume takes ~2 minutes. That's wrong in a way that matters:
 
-**`o6uoe47w73fszs` "mind-abot"** — A100-80GB, US-MD-1, $1.59/h, 250 GB vol
+> **A stopped RunPod pod does not reserve its GPU.**
+
+Both hosts filled while the pods were stopped, and `start-pod` requires the *original*
+machine. Neither could restart:
+
+    400 — "There are not enough free GPUs on the host machine to start this pod."
+
+A100s showed HIGH availability for *new* pods the whole time — it's host-specific, and
+there's no way to migrate a pod volume to a different host. Had to terminate and
+recreate, losing 112 GB of downloaded weights and datasets.
+
+**Rule:** for a break of hours or more, terminate and rebuild from scripts. Stop only
+wins for short breaks where you'll return to the same machine. Cost of being wrong is
+the rebuild; cost of being right is a few cents of volume storage — but the rebuild only
+stays cheap if the setup is fully scripted, which is the real argument for scripting it.
+
+Rebuild took **7 minutes** for both pods, versus ~40 minutes the first time, because by
+then the scripts carried every fix.
+
+---
+
+## RESUME STATE (2026-08-12, after rebuild)
+
+Pod IDs below are the **second** generation; the originals were terminated (see above).
+SSH port remaps on every start — re-read from `get-pod → runtime.ports`.
+
+**`lbewwyyec5ntys` "mind-abot-2"** — A100-80GB, US-MD-1, $1.59/h, 250 GB vol
 - `/workspace/data/MIND-Data` — 35 GB, all 730 files
 - `/workspace/ckpt/abot` — 24 GB; `/workspace/repos/{MIND,ABot-World}`
 - `/workspace/venvs/abot` — deps clean, flash-attn 2.8.3, all three ABot patches applied
@@ -244,7 +270,7 @@ remaps on every start — re-read from `get-pod → runtime.ports`.
   --test_root <preds> --num_gpus 1 --metrics lcm,visual,gsc`
 - Skip ViPE and DINOv3 (only `action`/`dino` need them; DINOv3 is gated anyway)
 
-**`qk1diiyk55p3c7` "matrix3-play"** — A100-80GB, US-WA-1, $1.59/h, 200 GB vol
+**`ksyndrsqfzdoax` "matrix3-play-2"** — A100-80GB, US-KS-2, $1.59/h, 200 GB vol
 - `/workspace/ckpt/mg3` — 53 GB; `/workspace/repos/Matrix-Game`
 - `/workspace/play.sh` — interactive REPL, verified working
 - Play: `ssh -t root@<ip> -p <port> -i ~/.ssh/id_ed25519 'bash /workspace/play.sh'`
